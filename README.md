@@ -1,10 +1,25 @@
+# resynth
+
+resynthesis is the process of taking a source texture and
+creating similar (oft tiling) textures based on it.
+
+resynth is a C rewrite of the original resynthesizer by [Paul Harrison.][pfh]
+it does not require GIMP to function; just feed it image paths and it will save copies.
+however, this program lacks the patching (masking) and texture transfer abilities of the original plugin.
+
+resynth produces [tiling images like those seen here.][examples]
+
+[pfh]: http://logarithmic.net/pfh/
+[examples]: http://logarithmic.net/pfh/resynthesizer/more
+
 ## related projects
 
-* [the original resynth gimp plugin in C++][orig]
-* [an updated gimp plugin in C and C++][gimp]
-* [syntex: similar algorithms based on resynth][syntex]
+* [the original resynthesizer GIMP plugin in C++][orig] and [the associated paper][paper]
+* [an updated resynthesizer GIMP plugin in C and C++][gimp]
+* [syntex: similar algorithms based on resynthesizer in C#][syntex]
 
 [orig]: http://logarithmic.net/pfh/resynthesizer
+[paper]: http://www.logarithmic.net/pfh-files/thesis/dissertation.pdf
 [gimp]: https://github.com/bootchk/resynthesizer/
 [syntex]: https://github.com/mxgmn/SynTex/
 
