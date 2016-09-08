@@ -390,51 +390,51 @@ int main(int argc, char *argv[]) {
 
         KYAA_FLAG_LONG('a', "autism",
 "        sensitivity to outliers\n"
-"        range: (0,256);     default: 32")
+"        range: [0,256];     default: 32")
             parameters.autism = (double)(kyaa_flag_arg) / 256.;
 
         KYAA_FLAG_LONG('N', "neighbors",
 "        points to use when sampling\n"
-"        range: (0,1024);    default: 29")
+"        range: [0,1024];    default: 29")
             parameters.neighbors = kyaa_flag_arg;
 
         KYAA_FLAG_LONG('r', "radius",
 "        square neighborhood, always odd\n"
-"        range: (0,32);      default: [n/a]")
+"        range: [0,32];      default: [n/a]")
             int radius = kyaa_flag_arg;
             radius = 2 * MAX(radius, 0) + 1;
             parameters.neighbors = radius * radius;
 
         KYAA_FLAG_LONG('R', "circle-radius",
 "        circle neighborhood radius\n"
-"        range: (1,128);     default: [n/a]")
+"        range: [1,128];     default: [n/a]")
             int radius = kyaa_flag_arg;
             radius = CLAMP(radius, 1, (int)(LEN(disc00)));
             parameters.neighbors = disc00[radius - 1];
 
         KYAA_FLAG_LONG('M', "tries",
 "        random points added to candidates\n"
-"        range: (0,65536);   default: 192")
+"        range: [0,65536];   default: 192")
             parameters.tries = kyaa_flag_arg;
 
         KYAA_FLAG_LONG('p', "polish",
 "        extra iterations\n"
-"        range: (0,9);       default: 0")
+"        range: [0,9];       default: 0")
             parameters.polish = kyaa_flag_arg;
 
         KYAA_FLAG_LONG('m', "magic",
 "        magic constant, affects iterations\n"
-"        range: (0,255);     default: 192")
+"        range: [0,255];     default: 192")
             parameters.magic = kyaa_flag_arg;
 
         KYAA_FLAG_LONG('s', "scale",
 "        output size multiplier; negative values set width and height\n"
-"        range: (-8192,32);  default: 1")
+"        range: [-8192,32];  default: 1")
             scale = kyaa_flag_arg;
 
         KYAA_FLAG_LONG('S', "seed",
 "        initial RNG value\n"
-"        range: (0,);        default: 0 [time(0)]")
+"                            default: 0 [time(0)]")
             seed = (unsigned long) kyaa_flag_arg;
 
         KYAA_HELP("  {files...}\n"

@@ -29,31 +29,31 @@ resynth produces [tiling images like those seen here.][examples]
 usage:
   -a  --autism
         sensitivity to outliers
-        range: (0,256);     default: 32
+        range: [0,256];     default: 32
   -N  --neighbors
         points to use when sampling
-        range: (0,1024);    default: 29
+        range: [0,1024];    default: 29
   -r  --radius
         square neighborhood, always odd
-        range: (0,32);      default: [n/a]
+        range: [0,32];      default: [n/a]
   -R  --circle-radius
         circle neighborhood radius
-        range: (1,128);     default: [n/a]
+        range: [1,128];     default: [n/a]
   -M  --tries
         random points added to candidates
-        range: (0,65536);   default: 192
+        range: [0,65536];   default: 192
   -p  --polish
         extra iterations
-        range: (0,9);       default: 0
+        range: [0,9];       default: 0
   -m  --magic
         magic constant, affects iterations
-        range: (0,255);     default: 192
+        range: [0,255];     default: 192
   -s  --scale
         output size multiplier; negative values set width and height
-        range: (-8192,32);  default: 1
+        range: [-8192,32];  default: 1
   -S  --seed
         initial RNG value
-        range: (0,);        default: 0 [time(0)]
+                            default: 0 [time(0)]
   {files...}
         image files to open, resynthesize, and save as {filename}.resynth.png
         required            default: [none]
