@@ -296,7 +296,7 @@ static void run(Resynth_state *s, Parameters parameters) {
 
     const int data_area = sb_count(s->data_points);
 
-    for (int p = 0; p < parameters.polish + p; p++) {
+    for (int p = 0; p < parameters.polish + 1; p++) {
         for (int i = 0; i < data_area; i++) {
             // shuffle in-place
             int j = rand() % data_area;
