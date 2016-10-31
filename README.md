@@ -42,9 +42,6 @@ usage:
   -M  --tries
         random points added to candidates
         range: [0,65536];   default: 192
-  -p  --polish
-        extra iterations
-        range: [0,9];       default: 0
   -m  --magic
         magic constant, affects iterations
         range: [0,255];     default: 192
@@ -59,8 +56,7 @@ usage:
         required            default: [none]
 ```
 
-the `radius` and `polish` parameters should probably be
-properly described or removed.
+the `radius` parameter should probably be removed.
 
 ### neighborhood
 

@@ -132,7 +132,7 @@ typedef struct {
     bool h_tile, v_tile;
     double autism;
     int neighbors, tries;
-    int polish, magic;
+    int magic;
 } Parameters;
 
 INLINE bool wrap_or_clip(const Parameters parameters, const Image image,
@@ -298,26 +298,24 @@ static void run(Resynth_state *s, Parameters parameters) {
 
     const int data_area = sb_count(s->data_points);
 
-    for (int p = 0; p < parameters.polish + 1; p++) {
-        for (int i = 0; i < data_area; i++) {
-            // shuffle in-place
-            // (we could use a better random function here)
-            int j = rand() % data_area;
-            Coord temp = s->data_points[i];
-            s->data_points[i] = s->data_points[j];
-            s->data_points[j] = temp;
-        }
+    // shuffle data points in-place
+    for (int i = 0; i < data_area; i++) {
+        // (we could use a better random function here)
+        int j = rand() % data_area;
+        Coord temp = s->data_points[i];
+        s->data_points[i] = s->data_points[j];
+        s->data_points[j] = temp;
+    }
 
-        // polishing improves pixels chosen early in the algorithm
-        // by reconsidering them after the output image has been filled.
-        // this greatly reduces the "sparklies" in the resulting image.
-        // this is achieved by appending the first n data points to the end.
-        // n is reduced exponentially by "magic" until it's less than 1.
-        if (parameters.magic) for (int n = data_area; n > 0;) {
-            n = n * parameters.magic / 256;
-            for (int i = 0; i < n; i++) {
-                sb_push(s->data_points, s->data_points[i]);
-            }
+    // polishing improves pixels chosen early in the algorithm
+    // by reconsidering them after the output image has been filled.
+    // this greatly reduces the "sparklies" in the resulting image.
+    // this is achieved by appending the first n data points to the end.
+    // n is reduced exponentially by "magic" until it's less than 1.
+    if (parameters.magic) for (int n = data_area; n > 0;) {
+        n = n * parameters.magic / 256;
+        for (int i = 0; i < n; i++) {
+            sb_push(s->data_points, s->data_points[i]);
         }
     }
 
@@ -443,7 +441,6 @@ int main(int argc, char *argv[]) {
     parameters.autism = 32. / 256.; // 30. / 256.
     parameters.neighbors = 29;      // 30
     parameters.tries = 192;         // 200 (or 80 in the paper)
-    parameters.polish = 0;          // 0
 
     int scale = 1;
     unsigned long seed = 0;
@@ -483,11 +480,6 @@ int main(int argc, char *argv[]) {
 "        range: [0,65536];   default: 192")
             parameters.tries = kyaa_flag_arg;
 
-        KYAA_FLAG_LONG('p', "polish",
-"        extra iterations\n"
-"        range: [0,9];       default: 0")
-            parameters.polish = kyaa_flag_arg;
-
         KYAA_FLAG_LONG('m', "magic",
 "        magic constant, affects iterations\n"
 "        range: [0,255];     default: 192")
@@ -514,7 +506,6 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
 
-        CLAMPV(parameters.polish, 0, 9);
         CLAMPV(parameters.magic, 0, 255);
         CLAMPV(parameters.autism, 0., 1.);
         CLAMPV(parameters.neighbors, 0, disc00[LEN(disc00) - 1]);
