@@ -11,15 +11,17 @@
     If not, visit <http://gnu.org/licenses/> to obtain one.
 */
 
-#include <errno.h>
-#include <math.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <errno.h> // for argument parsing with strtol (kyaa.h)
+#include <math.h> // for log (neglog_cauchy) used in pixel diff. calculations
+#include <stdbool.h> // we're targetting C11 anyway, may as well use it
+#include <stdint.h> // for uint8_t for pixel data
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <string.h> // for file extension mangling
+#include <time.h> // for time(0) as a random seed (srand)
 
+// decide which features we want from stb_image.
+// this should cover the most common formats.
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_STATIC
 #define STBI_ONLY_JPEG
@@ -28,31 +30,51 @@
 #define STBI_ONLY_GIF
 #include "stb_image.h"
 
+// likewise for stb_image_write. by using the static keyword,
+// any unused formats and functions can be stripped from the resulting binary.
+// we only use png (stbi_write_png) in this case.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_STATIC
 #include "stb_image_write.h"
 
+// this isn't the prettiest way of handling memory errors,
+// but it should suffice for our one-thing one-shot program.
 #define STRETCHY_BUFFER_OUT_OF_MEMORY \
     fprintf(stderr, "fatal error: ran out of memory in stb__sbgrowf\n"); \
     exit(1);
+// provides vector<>-like arrays of variable size.
 #include "stretchy_buffer.h"
 
+// for command-line argument parsing
 #include "kyaa.h"
 
+// convenience macros. hopefully these names don't interfere
+// with any defined in the standard library headers on any system.
+// it's technically not an error to redefine macros anyway.
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define CLAMP(x, l, u) (MIN(MAX(x, l), u))
 #define CLAMPV(x, l, u) x = CLAMP(x, l, u)
 #define LEN(a) (sizeof(a) / sizeof((a)[0]))
 
+// this macro lets us state how much memory we want a pointer to employ,
+// while freeing its old memory as needed.
+// note that this expects the given variable to be initialized to NULL
+// for its first allocation; using an uninitialized pointer is erroneous.
+// (this should probably be renamed to something more meaningful)
 #define MEMORY(a, size) \
     do { \
         if (a) (a) = (free(a), NULL); \
         if (size > 0) (a) = (typeof(a))(calloc(size, sizeof((a)[0]))); \
     } while (0) \
 
+// a simple extension to stretchy_buffer.h:
+// a macro that frees and nulls a pointer at the same time,
+// which should be safer and easier to program with.
 #define sb_freeset(a) ((a) = (sb_free(a), NULL))
 
+// in some cases, we must declare functions as static to prevent
+// their symbols being exported, thus truly allowing them to be inlined.
 #define INLINE static inline
 
 // end of generic boilerplate, here's the actual program:
@@ -93,6 +115,8 @@ typedef struct {
     int width, height, depth;
 } Image;
 
+// convenience macros to simplify image handling.
+// note that these secretly expect an image##_array variable to exist.
 #define IMAGE_RESIZE(image, w, h, d) \
     do { \
         image.width = w; \
@@ -113,6 +137,8 @@ typedef struct {
 
 INLINE bool wrap_or_clip(const Parameters parameters, const Image image,
                          Coord *point) {
+    // like modulo, with optional bounds checking.
+    // (perhaps we should just use modulo if h_tile and v_tile are both true?)
     while (point->x < 0) {
         if (parameters.h_tile) point->x += image.width;
         else return false;
@@ -134,6 +160,8 @@ INLINE bool wrap_or_clip(const Parameters parameters, const Image image,
 
 typedef struct {
     int input_bytes;
+    // note that these variables must exist alongside their "_array"s
+    // for the image macros to work.
     Image data, corpus, status;
     Pixel *data_array, *corpus_array;
     Status *status_array;
@@ -146,7 +174,7 @@ typedef struct {
     Status **neighbor_statuses;
     int n_neighbors;
 
-    int *diff_table; // uint16_t ?
+    int *diff_table; // (might be more efficient to store as uint16_t?)
 
     int best;
     Coord best_point;
@@ -168,6 +196,8 @@ static double neglog_cauchy(double x) {
 }
 
 static void make_offset_list(Resynth_state *s) {
+    // generate a vector of x,y offsets used to search around any given pixel.
+    // this is constrained by the minimum image size to prevent overlapping.
     int width = MIN(s->corpus.width, s->data.width);
     int height = MIN(s->corpus.height, s->data.height);
 
@@ -179,11 +209,13 @@ static void make_offset_list(Resynth_state *s) {
         }
     }
 
+    // TODO: describe how/why this is sorted
     qsort(s->sorted_offsets, sb_count(s->sorted_offsets),
           sizeof(Coord), coord_compare);
 }
 
 INLINE void try_point(Resynth_state *s, const Coord point) {
+    // consider a pixel and its neighbors as candidates for the best-fit.
     int sum = 0;
 
     for (int i = 0; i < s->n_neighbors; i++) {
@@ -207,10 +239,12 @@ INLINE void try_point(Resynth_state *s, const Coord point) {
 }
 
 static void run(Resynth_state *s, Parameters parameters) {
+    // "resynthesize" an output image from a given input image.
     sb_freeset(s->data_points);
     sb_freeset(s->corpus_points);
     sb_freeset(s->sorted_offsets);
 
+    // (iirc i opted to put diff_table on heap to keep Resynth_state small)
     MEMORY(s->diff_table, 512);
     MEMORY(s->neighbors, parameters.neighbors);
     MEMORY(s->neighbor_values, parameters.neighbors);
@@ -218,15 +252,19 @@ static void run(Resynth_state *s, Parameters parameters) {
 
     IMAGE_RESIZE(s->status, s->data.width, s->data.height, 1);
 
+    // set default values and allocate points to shuffle later.
     for (int y = 0; y < s->status.height; y++) {
         for (int x = 0; x < s->status.width; x++) {
+            // (this might be redundant since this memory is calloc'd)
             image_at(s->status, x, y)->has_source = false;
             image_at(s->status, x, y)->has_value = false;
+
             Coord coord = {x, y};
             sb_push(s->data_points, coord);
         }
     }
 
+    // likewise for the corpus.
     for (int y = 0; y < s->corpus.height; y++) {
         for (int x = 0; x < s->corpus.width; x++) {
             Coord coord = {x, y};
@@ -243,6 +281,11 @@ static void run(Resynth_state *s, Parameters parameters) {
 
     make_offset_list(s);
 
+    // precompute how "different" a pixel value is from another.
+    // this greatly affects how apparent any seams are in the synthesized image.
+    // this is done per 8-bit channel, so only 256 * 2 values are needed.
+    // since we can't use negative indices, we pretend index 256 is 0 instead.
+    // (you could try adding CIELAB heuristics, but this seems robust enough)
     if (parameters.autism > 0) for (int i = -256; i < 256; i++) {
         double value = neglog_cauchy(i / 256.0 / parameters.autism) /
                        neglog_cauchy(1.0 / parameters.autism) * 65536.0;
@@ -251,17 +294,22 @@ static void run(Resynth_state *s, Parameters parameters) {
         s->diff_table[256 + i] = (int)(i != 0) * 65536;
     }
 
-    int data_area = sb_count(s->data_points);
+    const int data_area = sb_count(s->data_points);
 
     for (int p = 0; p < parameters.polish + p; p++) {
         for (int i = 0; i < data_area; i++) {
-            // shuffle
+            // shuffle in-place
             int j = rand() % data_area;
             Coord temp = s->data_points[i];
             s->data_points[i] = s->data_points[j];
             s->data_points[j] = temp;
         }
 
+        // polishing improves pixels chosen early in the algorithm
+        // by reconsidering them after the output image has been filled.
+        // this greatly reduces the "sparklies" in the resulting image.
+        // this is achieved by appending the first n data points to the end.
+        // n is reduced exponentially by "magic" until it's less than 1.
         if (parameters.magic) for (int n = data_area; n > 0;) {
             n = n * parameters.magic / 256;
             for (int i = 0; i < n; i++) {
@@ -270,18 +318,23 @@ static void run(Resynth_state *s, Parameters parameters) {
         }
     }
 
+    // prepare an array of neighbors we've already computed the difference of.
+    // this is a simple optimization and isn't critical to the algorithm.
+    // (tried_array is referred to implicitly by macros)
     IMAGE_RESIZE(s->tried, s->corpus.width, s->corpus.height, 1);
-    int corpus_area = s->corpus.width * s->corpus.height;
+    const int corpus_area = s->corpus.width * s->corpus.height;
     for (int i = 0; i < corpus_area; i++) s->tried_array[i] = -1;
 
-    // finally, do it
+    // finally, resynthesize.
 
     for (int i = sb_count(s->data_points) - 1; i >= 0; i--) {
         Coord position = s->data_points[i];
 
-        // this point will always have a value by the end of this iteration
+        // this point is guaranteed to have a value after this iteration.
         image_atc(s->status, position)->has_value = true;
 
+        // collect neighboring pixels as candidates for best-fit.
+        // the order we check and collect is relevant, thus "sorted_offsets".
         s->n_neighbors = 0;
         const int sorted_offsets_size = sb_count(s->sorted_offsets);
         for (int j = 0; j < sorted_offsets_size; j++) {
@@ -301,8 +354,10 @@ static void run(Resynth_state *s, Parameters parameters) {
             }
         }
 
+        // (this macro might not exist on any compiler that isn't gcc or clang)
         s->best = __INT_MAX__;
 
+        // consider each neighboring pixel collected as a best-fit.
         for (int j = 0; j < s->n_neighbors && s->best != 0; j++) {
             if (s->neighbor_statuses[j]->has_source) {
                 Coord point = coord_sub(s->neighbor_statuses[j]->source,
@@ -311,16 +366,22 @@ static void run(Resynth_state *s, Parameters parameters) {
                     point.x >= s->corpus.width || point.y >= s->corpus.height) {
                     continue;
                 }
+                // skip computing differences of points
+                // we've already done this iteration. not mandatory.
                 if (*image_atc(s->tried, point) == i) continue;
                 try_point(s, point);
                 *image_atc(s->tried, point) = i;
             }
         }
 
+        // try some random points in the corpus. this is required for
+        // choosing the first couple pixels, since they have no neighbors.
+        // after that, this step is optional. it can improve subjective quality.
         for (int j = 0; j < parameters.tries && s->best != 0; j++) {
             try_point(s, s->corpus_points[rand() % sb_count(s->corpus_points)]);
         }
 
+        // finally, copy the best pixel to the output image.
         for (int j = 0; j < s->input_bytes; j++) {
             image_atc(s->data, position)[j] =
                 image_atc(s->corpus, s->best_point)[j];
@@ -334,8 +395,8 @@ static char *manipulate_filename(const char *fn,
                                  const char *new_extension) {
 #define MAX_LENGTH 256
     int length = strlen(fn);
-    if (length > MAX_LENGTH)
-        length = MAX_LENGTH;
+    if (length > MAX_LENGTH) length = MAX_LENGTH;
+    // out_fn must be freed by the caller.
     char *out_fn = (char *)calloc(2 * MAX_LENGTH, 1);
     strncpy(out_fn, fn, length);
 
@@ -369,11 +430,12 @@ static const int disc00[] = {
 
 int main(int argc, char *argv[]) {
     Resynth_state state = {0};
-    Resynth_state *s = &state; // just for consistency
+    Resynth_state *s = &state; // (just for consistency across functions)
 
     Parameters parameters = {0};
     parameters.v_tile = true;
     parameters.h_tile = true;
+    // blah = our default;          // original resynthizer default
     parameters.magic = 192;         // 192 (3/4)
     parameters.autism = 32. / 256.; // 30. / 256.
     parameters.neighbors = 29;      // 30
@@ -383,6 +445,7 @@ int main(int argc, char *argv[]) {
     int scale = 1;
     unsigned long seed = 0;
 
+    // our main() return value. subtracted by one for each failed image.
     int ret = 0;
 
     KYAA_LOOP {
