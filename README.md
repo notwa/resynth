@@ -33,9 +33,6 @@ usage:
   -N  --neighbors
         points to use when sampling
         range: [0,1024];    default: 29
-  -r  --radius
-        square neighborhood, always odd
-        range: [0,32];      default: [n/a]
   -R  --circle-radius
         circle neighborhood radius
         range: [1,128];     default: [n/a]
@@ -55,8 +52,6 @@ usage:
         image files to open, resynthesize, and save as {filename}.resynth.png
         required            default: [none]
 ```
-
-the `radius` parameter should probably be removed.
 
 ### neighborhood
 

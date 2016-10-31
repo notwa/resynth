@@ -461,13 +461,6 @@ int main(int argc, char *argv[]) {
 "        range: [0,1024];    default: 29")
             parameters.neighbors = kyaa_flag_arg;
 
-        KYAA_FLAG_LONG('r', "radius",
-"        square neighborhood, always odd\n"
-"        range: [0,32];      default: [n/a]")
-            int radius = kyaa_flag_arg;
-            radius = 2 * MAX(radius, 0) + 1;
-            parameters.neighbors = radius * radius;
-
         KYAA_FLAG_LONG('R', "circle-radius",
 "        circle neighborhood radius\n"
 "        range: [1,128];     default: [n/a]")
