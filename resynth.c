@@ -209,13 +209,15 @@ static void make_offset_list(Resynth_state *s) {
         }
     }
 
-    // TODO: describe how/why this is sorted
+    // sort offsets in ascending distance from the center zero-point.
+    // the order of equal distances is undefined. (it doesn't seem to matter)
+    // (for a more detailed description of what's going on, refer to the README)
     qsort(s->sorted_offsets, sb_count(s->sorted_offsets),
           sizeof(Coord), coord_compare);
 }
 
 INLINE void try_point(Resynth_state *s, const Coord point) {
-    // consider a pixel and its neighbors as candidates for the best-fit.
+    // consider a candidate pixel for the best-fit by considering its neighbors.
     int sum = 0;
 
     for (int i = 0; i < s->n_neighbors; i++) {
@@ -299,6 +301,7 @@ static void run(Resynth_state *s, Parameters parameters) {
     for (int p = 0; p < parameters.polish + 1; p++) {
         for (int i = 0; i < data_area; i++) {
             // shuffle in-place
+            // (we could use a better random function here)
             int j = rand() % data_area;
             Coord temp = s->data_points[i];
             s->data_points[i] = s->data_points[j];
@@ -435,7 +438,7 @@ int main(int argc, char *argv[]) {
     Parameters parameters = {0};
     parameters.v_tile = true;
     parameters.h_tile = true;
-    // blah = our default;          // original resynthizer default
+    // blah = our default;          // original resynthesizer default
     parameters.magic = 192;         // 192 (3/4)
     parameters.autism = 32. / 256.; // 30. / 256.
     parameters.neighbors = 29;      // 30

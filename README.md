@@ -59,8 +59,66 @@ usage:
         required            default: [none]
 ```
 
-apologies for the `radius`, `circle-radius`, and `polish` parameters.
-they should be properly described or removed.
+the `radius` and `polish` parameters should probably be
+properly described or removed.
+
+### neighborhood
+
+offsets are sorted in ascending distance from the center (the 0,0 point).
+
+the order of equal distances is undefined.
+this probably doesn't matter matter,
+considering the algorithm handles non-circular
+neighborhoods just fine — more on that later.
+
+consider the first 29 offsets,
+which is the default number of neighbors:
+
+* distance of 0:  
+    `{ 0, 0}`
+* distance of 1:  
+    `{ 0,-1}, {+1, 0}, {-1, 0}, { 0,+1}`
+* distance of sqrt(2):  
+    `{-1,-1}, {-1,+1}, {+1,+1}, {+1,-1}`
+* distance of 2:  
+    `{+2, 0}, {-2, 0}, { 0,+2}, { 0,-2}`
+* distance of sqrt(5):  
+    `{-1,-2}, {-2,+1}, {-2,-1}, {+1,+2}, {-1,+2}, {+2,-1}, {+1,-2}, {+2,+1}`
+* distance of sqrt(8):  
+    `{+2,-2}, {-2,-2}, {-2,+2}, {+2,+2}`
+* distance of 3:  
+    `{+3, 0}, { 0,-3}, {-3, 0}, { 0,+3}`
+
+the default neighborhood of 29 yields a (pixelated) circle,
+as in this crude ascii art:
+```
+   X
+ XXXXX
+ XXXXX
+XXXXXXX
+ XXXXX
+ XXXXX
+   X
+```
+
+resynth provides a portion of [the associated integer sequence A057961,][A057961]
+allowing the neighborhood to be specified as a radius-like size,
+with guaranteed symmetry about the X and Y axes.
+this is the `-R` flag, and the first few values are visualized here:
+```
+   -R1     -R2     -R3     -R4     -R5     -R6     -R7
+
+                                                    X
+                            X      XXX    XXXXX   XXXXX
+            X      XXX     XXX    XXXXX   XXXXX   XXXXX
+    X      XXX     XXX    XXXXX   XXXXX   XXXXX  XXXXXXX
+            X      XXX     XXX    XXXXX   XXXXX   XXXXX
+                            X      XXX    XXXXX   XXXXX
+                                                    X
+                      equivalent to
+   -N1     -N5     -N9     -N13    -N21    -N25    -N29
+```
+[A057961]: http://oeis.org/A057961
 
 ## notes
 
