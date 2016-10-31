@@ -17,7 +17,7 @@
 
 #define KYAA_SETUP \
     /* dumb sanity checks */ \
-    if (argc <= 0 || argv == NULL || argv[0] == NULL || argv[0][0] == '\0') { \
+    if (argc <= 0 || argv == NULL || argv[0] == NULL) { \
         fprintf(stderr, "You've met with a terrible fate.\n"); \
         return KYAA_ERROR; \
     } \
