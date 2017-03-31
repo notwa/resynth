@@ -185,6 +185,9 @@ static void state_free(Resynth_state *s) {
     sb_freeset(s->corpus_points);
     sb_freeset(s->sorted_offsets);
     MEMORY(s->diff_table, 0);
+    MEMORY(s->neighbors, 0);
+    MEMORY(s->neighbor_values, 0);
+    MEMORY(s->neighbor_statuses, 0);
     MEMORY(s->data_array, 0);
     MEMORY(s->corpus_array, 0);
     MEMORY(s->status_array, 0);
