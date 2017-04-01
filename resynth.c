@@ -137,6 +137,7 @@ typedef struct {
     double autism;
     int neighbors, tries;
     int magic;
+    bool weighted;
 } Parameters;
 
 INLINE bool wrap_or_clip(const Parameters parameters, const Image image,
@@ -223,23 +224,34 @@ static void make_offset_list(Resynth_state *s) {
           sizeof(Coord), coord_compare);
 }
 
-INLINE void try_point(Resynth_state *s, const Coord point) {
+INLINE int weight_at(const Coord point) {
+    if (point.x == 0 && point.y == 0) return 0;
+    // this is stable and accurate up to -N 37 (-R 9)
+    // 520 might work in place of 360 and provide more accuracy w/o overflows.
+    return 360 / (point.x * point.x + point.y * point.y);
+}
+
+INLINE void try_point(Resynth_state *s, const Coord point, bool weighted) {
     // consider a candidate pixel for the best-fit by considering its neighbors.
     int sum = 0;
 
     for (int i = 0; i < s->n_neighbors; i++) {
         Coord off_point = coord_add(point, s->neighbors[i]);
+
+        int diff = 0;
         if (off_point.x < 0 || off_point.y < 0 ||
             off_point.x >= s->corpus.width || off_point.y >= s->corpus.height) {
-            sum += s->diff_table[0] * s->input_bytes;
+            diff = s->diff_table[0] * s->input_bytes;
         } else if (i) {
             const Pixel *corpus_pixel = image_atc(s->corpus, off_point);
             const Pixel *data_pixel = s->neighbor_values[i].v;
             for (int j = 0; j < s->input_bytes; j++) {
-                sum += s->diff_table[256 + data_pixel[j] - corpus_pixel[j]];
+                diff += s->diff_table[256 + data_pixel[j] - corpus_pixel[j]];
             }
         }
 
+        if (weighted) diff *= weight_at(s->neighbors[i]);
+        sum += diff;
         if (sum >= s->best) return;
     }
 
@@ -376,7 +388,7 @@ static void run(Resynth_state *s, Parameters parameters) {
                 // skip computing differences of points
                 // we've already done this iteration. not mandatory.
                 if (*image_atc(s->tried, point) == i) continue;
-                try_point(s, point);
+                try_point(s, point, parameters.weighted);
                 *image_atc(s->tried, point) = i;
             }
         }
@@ -385,7 +397,7 @@ static void run(Resynth_state *s, Parameters parameters) {
         // choosing the first couple pixels, since they have no neighbors.
         // after that, this step is optional. it can improve subjective quality.
         for (int j = 0; j < parameters.tries && s->best != 0; j++) {
-            try_point(s, s->corpus_points[rand() % sb_count(s->corpus_points)]);
+            try_point(s, s->corpus_points[rand() % sb_count(s->corpus_points)], parameters.weighted);
         }
 
         // finally, copy the best pixel to the output image.
@@ -442,6 +454,7 @@ int main(int argc, char *argv[]) {
     Parameters parameters = {0};
     parameters.v_tile = true;
     parameters.h_tile = true;
+    parameters.weighted = false;    // our extension
     // blah = our default;          // original resynthesizer default
     parameters.magic = 192;         // 192 (3/4)
     parameters.autism = 32. / 256.; // 30. / 256.
@@ -493,6 +506,15 @@ int main(int argc, char *argv[]) {
 "        initial RNG value\n"
 "                            default: 0 [time(0)]")
             seed = (unsigned long) kyaa_flag_arg;
+
+        KYAA_FLAG('w', "weighted",
+"        enables something like laplace convolution but not really\n"
+"                            default: off")
+            parameters.weighted = true;
+
+        KYAA_FLAG('W', "unweighted",
+"        disables --weighted")
+            parameters.weighted = false;
 
         KYAA_HELP("  {files...}\n"
 "        image files to open, resynthesize, and save as {filename}.resynth.png\n"
