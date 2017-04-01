@@ -305,7 +305,7 @@ static void run(Resynth_state *s, Parameters parameters) {
 
     const int data_area = sb_count(s->data_points);
 
-    // shuffle data points in-place
+    // shuffle the data points in-place.
     for (int i = 0; i < data_area; i++) {
         // (we could use a better random function here)
         int j = rand() % data_area;

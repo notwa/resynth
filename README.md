@@ -58,7 +58,7 @@ usage:
 offsets are sorted in ascending distance from the center (the 0,0 point).
 
 the order of equal distances is undefined.
-this probably doesn't matter matter,
+this doesn't matter much in practice,
 considering the algorithm handles non-circular
 neighborhoods just fine — more on that later.
 
