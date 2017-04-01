@@ -35,7 +35,10 @@
 // we only use png (stbi_write_png) in this case.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_STATIC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
 #include "stb_image_write.h"
+#pragma GCC diagnostic pop
 
 // this isn't the prettiest way of handling memory errors,
 // but it should suffice for our one-thing one-shot program.
@@ -359,8 +362,7 @@ static void run(Resynth_state *s, Parameters parameters) {
             }
         }
 
-        // (this macro might not exist on any compiler that isn't gcc or clang)
-        s->best = __INT_MAX__;
+        s->best = INT_MAX;
 
         // consider each neighboring pixel collected as a best-fit.
         for (int j = 0; j < s->n_neighbors && s->best != 0; j++) {
