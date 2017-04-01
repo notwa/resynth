@@ -11,7 +11,7 @@
     If not, visit <http://gnu.org/licenses/> to obtain one.
 */
 
-#include <errno.h> // for argument parsing with strtol (kyaa.h)
+#include <limits.h>
 #include <math.h> // for log (neglog_cauchy) used in pixel diff. calculations
 #include <stdbool.h> // we're targetting C11 anyway, may as well use it
 #include <stdint.h> // for uint8_t for pixel data
@@ -47,6 +47,7 @@
 
 // for command-line argument parsing
 #include "kyaa.h"
+#include "kyaa_extra.h"
 
 // convenience macros. hopefully these names don't interfere
 // with any defined in the standard library headers on any system.

@@ -16,7 +16,7 @@
 #endif
 
 #define KYAA_SETUP \
-    /* dumb sanity checks */ \
+    /* sanity checks */ \
     if (argc <= 0 || argv == NULL || argv[0] == NULL) { \
         fprintf(stderr, "You've met with a terrible fate.\n"); \
         return KYAA_ERROR; \
@@ -103,15 +103,6 @@
         } \
         kyaa_flag = c; \
         kyaa_any = true; \
-
-#define KYAA_FLAG_LONG(c, name, description) \
-    KYAA_FLAG_ARG(c, name, description) \
-        errno = 0; \
-        long kyaa_flag_arg = strtol(kyaa_etc, NULL, 0); \
-        if (errno) { \
-            perror(NULL); \
-            return KYAA_ERROR; \
-        } \
 
 #define KYAA_HELP(description) \
     } \
