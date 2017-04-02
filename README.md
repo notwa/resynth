@@ -126,11 +126,5 @@ resynth includes the following header libraries:
 
 compile like
 ```
-clang -std=gnu11 -lm -Ofast resynth.c -o resynth
-```
-
-extra flags that i use are
-```
--Wall -Wextra -Werror=implicit-function-declaration -Winline -Wshadow
--Wno-unused -Wno-padded -Wno-missing-field-initializers -Wno-misleading-indentation -Wno-disabled-macro-expansion -Wno-language-extension-token -Wno-unknown-warning-option
+clang -std=gnu11 -lm -Ofast -DNDEBUG resynth.c -o resynth
 ```
