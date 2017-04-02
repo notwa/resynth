@@ -113,10 +113,16 @@ this is the `-R` flag, and the first few values are visualized here:
 
 ## notes
 
-includes header libraries from [nothings (stb)][stb] and [notwa (kyaa).][kyaa]
+resynth includes the following header libraries:
+
+* [stb\_image.h by nothings et al.][stb] (public domain / MIT)
+* [stb\_image\_write.h by nothings et al.][stb] (public domain / MIT)
+* [kyaa.h by notwa][kyaa] (public domain)
+* [rnd.h by Mattias Gustavsson][rnd] (public domain / MIT)
 
 [stb]: https://github.com/nothings/stb
 [kyaa]: https://gist.github.com/notwa/5d287d807ffe11bbb553462c9940445c#file-kyaa-md
+[rnd]: https://github.com/mattiasgustavsson/libs
 
 compile like
 ```

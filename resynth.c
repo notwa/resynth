@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> // for file extension mangling
-#include <time.h> // for time(0) as a random seed (srand)
+#include <time.h> // for time(0) as a random seed
 
 // decide which features we want from stb_image.
 // this should cover the most common formats.
@@ -51,6 +51,15 @@
 // for command-line argument parsing
 #include "kyaa.h"
 #include "kyaa_extra.h"
+
+// rand() is neither consistent across platforms
+// nor guaranteed to have desirable properties,
+// so we use this random number generator instead.
+#define RND_U32 uint32_t
+#define RND_U64 uint64_t
+#define RND_IMPLEMENTATION
+#include "rnd.h"
+rnd_pcg_t pcg;
 
 // convenience macros. hopefully these names don't interfere
 // with any defined in the standard library headers on any system.
@@ -329,8 +338,7 @@ static void run(Resynth_state *s, Parameters parameters) {
 
     // shuffle the data points in-place.
     for (int i = 0; i < data_area; i++) {
-        // (we could use a better random function here)
-        int j = rand() % data_area;
+        int j = rnd_pcg_range(&pcg, 0, data_area - 1);
         Coord temp = s->data_points[i];
         s->data_points[i] = s->data_points[j];
         s->data_points[j] = temp;
@@ -407,7 +415,8 @@ static void run(Resynth_state *s, Parameters parameters) {
         // choosing the first couple pixels, since they have no neighbors.
         // after that, this step is optional. it can improve subjective quality.
         for (int j = 0; j < parameters.tries && s->best != 0; j++) {
-            try_point(s, s->corpus_points[rand() % sb_count(s->corpus_points)], parameters.weighted);
+            int random = rnd_pcg_range(&pcg, 0, sb_count(s->corpus_points) - 1);
+            try_point(s, s->corpus_points[random], parameters.weighted);
         }
 
         // finally, copy the best pixel to the output image.
@@ -567,8 +576,8 @@ int main(int argc, char *argv[]) {
 
         stbi_image_free(image);
 
-        if (seed) srand(seed);
-        else srand(time(0));
+        if (seed) rnd_pcg_seed(&pcg, seed);
+        else rnd_pcg_seed(&pcg, time(0));
         run(s, parameters);
 
         char *out_fn = manipulate_filename(fn, ".resynth.png");
