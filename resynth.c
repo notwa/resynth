@@ -225,7 +225,7 @@ static void make_offset_list(Resynth_state *s) {
 }
 
 INLINE int weight_at(const Coord point) {
-    if (point.x == 0 && point.y == 0) return 0;
+    if (point.x == 0 && point.y == 0) return 360;
     // this is stable and accurate up to -N 37 (-R 9)
     // 520 might work in place of 360 and provide more accuracy w/o overflows.
     return 360 / (point.x * point.x + point.y * point.y);
@@ -241,6 +241,7 @@ INLINE void try_point(Resynth_state *s, const Coord point, bool weighted) {
         int diff = 0;
         if (off_point.x < 0 || off_point.y < 0 ||
             off_point.x >= s->corpus.width || off_point.y >= s->corpus.height) {
+            // penalize edges, assuming the corpus image doesn't wrap cleanly.
             diff = s->diff_table[0] * s->input_bytes;
         } else if (i) {
             const Pixel *corpus_pixel = image_atc(s->corpus, off_point);
@@ -251,7 +252,16 @@ INLINE void try_point(Resynth_state *s, const Coord point, bool weighted) {
         }
 
         if (weighted) diff *= weight_at(s->neighbors[i]);
+#ifdef NDEBUG
         sum += diff;
+#else
+        if (__builtin_add_overflow(sum, diff, &sum)) {
+            fprintf(stderr, "integer overflow at (%i,%i) + (%i,%i)\n",
+                    point.x, point.y, s->neighbors[i].x, s->neighbors[i].y);
+            fprintf(stderr, "diff: %i\n", diff);
+            exit(1);
+        }
+#endif
         if (sum >= s->best) return;
     }
 
