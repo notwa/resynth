@@ -278,7 +278,7 @@ INLINE void try_point(Resynth_state *s, const Coord point, bool weighted) {
     s->best_point = point;
 }
 
-static void run(Resynth_state *s, Parameters parameters) {
+INLINE void resynth__init(Resynth_state *s, Parameters parameters) {
     // "resynthesize" an output image from a given input image.
     sb_freeset(s->data_points);
     sb_freeset(s->corpus_points);
@@ -362,8 +362,10 @@ static void run(Resynth_state *s, Parameters parameters) {
     IMAGE_RESIZE(s->tried, s->corpus.width, s->corpus.height, 1);
     const int corpus_area = s->corpus.width * s->corpus.height;
     for (int i = 0; i < corpus_area; i++) s->tried_array[i] = -1;
+}
 
-    // finally, resynthesize.
+static void resynth(Resynth_state *s, Parameters parameters) {
+    resynth__init(s, parameters);
 
     for (int i = sb_count(s->data_points) - 1; i >= 0; i--) {
         Coord position = s->data_points[i];
@@ -578,7 +580,7 @@ int main(int argc, char *argv[]) {
 
         if (seed) rnd_pcg_seed(&pcg, seed);
         else rnd_pcg_seed(&pcg, time(0));
-        run(s, parameters);
+        resynth(s, parameters);
 
         char *out_fn = manipulate_filename(fn, ".resynth.png");
         puts(out_fn);
