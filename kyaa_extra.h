@@ -1,3 +1,8 @@
+/* kyaa_extra.h - extensions to kyaa for parsing arguments.
+    This is free and unencumbered software released into the public domain.
+    Refer to kyaa.md for documentation.
+*/
+
 static char *kyaa_skip_spaces(char *str) {
     /* iterates str to first non-space character according to the C locale */
     while (*str != '\0') {
@@ -173,7 +178,8 @@ static const char *kyaa_str_to_long(char *str, long *p_out) {
 
     if (*str == '\0') return "no number given";
 
-    // TODO: comment on how we go towards negatives instead of positives
+    // NOTE: we actually subtract each digit from the result instead of summing.
+    //       this lets us represent LONG_MIN without overflowing.
     const char *err;
     switch (base) {
         case  2: { err = kyaa__base_2( &str, &out); } break;
@@ -187,6 +193,7 @@ static const char *kyaa_str_to_long(char *str, long *p_out) {
     str = kyaa_skip_spaces(str);
     if (*str != '\0') return "unexpected character";
 
+    // NOTE: out is negative here; see above comment.
     // assuming two's complement
     if (!negated && out == LONG_MIN) return "out of range for long integer";
     *p_out = negated ? out : -out;

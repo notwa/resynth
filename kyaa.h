@@ -1,6 +1,6 @@
 /* kyaa.h - macro hacks for handling main() arguments
-    license: public domain or whatever.
-    documentation is kept separate in kyaa.md
+    This is free and unencumbered software released into the public domain.
+    Refer to kyaa.md for documentation.
 */
 
 #pragma once
