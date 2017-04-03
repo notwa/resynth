@@ -97,17 +97,17 @@ allowing the neighborhood to be specified as a radius-like size,
 with guaranteed symmetry about the X and Y axes.
 this is the `-R` flag, and the first few values are visualized here:
 ```
-   -R1     -R2     -R3     -R4     -R5     -R6     -R7
+   -R1     -R2     -R3     -R4     -R5     -R6     -R7     -R8
 
-                                                    X
-                            X      XXX    XXXXX   XXXXX
-            X      XXX     XXX    XXXXX   XXXXX   XXXXX
-    X      XXX     XXX    XXXXX   XXXXX   XXXXX  XXXXXXX
-            X      XXX     XXX    XXXXX   XXXXX   XXXXX
-                            X      XXX    XXXXX   XXXXX
-                                                    X
+                                                    X      XXX
+                            X      XXX    XXXXX   XXXXX   XXXXX
+            X      XXX     XXX    XXXXX   XXXXX   XXXXX  XXXXXXX
+    X      XXX     XXX    XXXXX   XXXXX   XXXXX  XXXXXXX XXXXXXX
+            X      XXX     XXX    XXXXX   XXXXX   XXXXX  XXXXXXX
+                            X      XXX    XXXXX   XXXXX   XXXXX
+                                                    X      XXX
                       equivalent to
-   -N1     -N5     -N9     -N13    -N21    -N25    -N29
+   -N1     -N5     -N9     -N13    -N21    -N25    -N29    -N37
 ```
 [A057961]: http://oeis.org/A057961
 
