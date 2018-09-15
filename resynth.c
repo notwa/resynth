@@ -146,7 +146,6 @@ typedef struct {
     double autism;
     int neighbors, tries;
     int magic;
-    bool weighted;
 } Parameters;
 
 INLINE bool wrap_or_clip(const Parameters parameters, const Image image,
@@ -233,14 +232,7 @@ static void make_offset_list(Resynth_state *s) {
           sizeof(Coord), coord_compare);
 }
 
-INLINE int weight_at(const Coord point) {
-    if (point.x == 0 && point.y == 0) return 360;
-    // this is stable and accurate up to -N 37 (-R 9)
-    // 520 might work in place of 360 and provide more accuracy w/o overflows.
-    return 360 / (point.x * point.x + point.y * point.y);
-}
-
-INLINE void try_point(Resynth_state *s, const Coord point, bool weighted) {
+INLINE void try_point(Resynth_state *s, const Coord point) {
     // consider a candidate pixel for the best-fit by considering its neighbors.
     int sum = 0;
 
@@ -260,7 +252,6 @@ INLINE void try_point(Resynth_state *s, const Coord point, bool weighted) {
             }
         }
 
-        if (weighted) diff *= weight_at(s->neighbors[i]);
 #ifdef NDEBUG
         sum += diff;
 #else
@@ -408,7 +399,7 @@ static void resynth(Resynth_state *s, Parameters parameters) {
                 // skip computing differences of points
                 // we've already done this iteration. not mandatory.
                 if (*image_atc(s->tried, point) == i) continue;
-                try_point(s, point, parameters.weighted);
+                try_point(s, point);
                 *image_atc(s->tried, point) = i;
             }
         }
@@ -418,7 +409,7 @@ static void resynth(Resynth_state *s, Parameters parameters) {
         // after that, this step is optional. it can improve subjective quality.
         for (int j = 0; j < parameters.tries && s->best != 0; j++) {
             int random = rnd_pcg_range(&pcg, 0, sb_count(s->corpus_points) - 1);
-            try_point(s, s->corpus_points[random], parameters.weighted);
+            try_point(s, s->corpus_points[random]);
         }
 
         // finally, copy the best pixel to the output image.
@@ -475,7 +466,6 @@ int main(int argc, char *argv[]) {
     Parameters parameters = {0};
     parameters.v_tile = true;
     parameters.h_tile = true;
-    parameters.weighted = false;    // our extension
     // blah = our default;          // original resynthesizer default
     parameters.magic = 192;         // 192 (3/4)
     parameters.autism = 32. / 256.; // 30. / 256.
@@ -527,15 +517,6 @@ int main(int argc, char *argv[]) {
 "        initial RNG value\n"
 "                            default: 0 [time(0)]")
             seed = (unsigned long) kyaa_flag_arg;
-
-        KYAA_FLAG('w', "weighted",
-"        enables something like laplace convolution but not really\n"
-"                            default: off")
-            parameters.weighted = true;
-
-        KYAA_FLAG('W', "unweighted",
-"        disables --weighted")
-            parameters.weighted = false;
 
         KYAA_HELP("  {files...}\n"
 "        image files to open, resynthesize, and save as {filename}.resynth.png\n"
