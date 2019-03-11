@@ -270,7 +270,6 @@ INLINE void try_point(Resynth_state *s, const Coord point) {
 }
 
 INLINE void resynth__init(Resynth_state *s, Parameters parameters) {
-    // "resynthesize" an output image from a given input image.
     sb_freeset(s->data_points);
     sb_freeset(s->corpus_points);
     sb_freeset(s->sorted_offsets);
@@ -356,6 +355,7 @@ INLINE void resynth__init(Resynth_state *s, Parameters parameters) {
 }
 
 static void resynth(Resynth_state *s, Parameters parameters) {
+    // "resynthesize" an output image from a given input image.
     resynth__init(s, parameters);
 
     for (int i = sb_count(s->data_points) - 1; i >= 0; i--) {
