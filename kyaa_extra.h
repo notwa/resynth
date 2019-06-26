@@ -1,9 +1,12 @@
 /* kyaa_extra.h - extensions to kyaa for parsing arguments.
     This is free and unencumbered software released into the public domain.
-    Refer to kyaa.md for documentation.
+    For more information, please refer to <http://unlicense.org>
 */
 
-static char *kyaa_skip_spaces(char *str) {
+#ifndef KYAA_EXTRA
+#define KYAA_EXTRA
+
+static const char *kyaa_skip_spaces(const char *str) {
     /* iterates str to first non-space character according to the C locale */
     while (*str != '\0') {
         switch (*str) {
@@ -19,8 +22,8 @@ static char *kyaa_skip_spaces(char *str) {
     return str;
 }
 
-static const char *kyaa__base_2(char **p_str, long *p_out) {
-    char *str = *p_str;
+static const char *kyaa__base_2(const char **p_str, long *p_out) {
+    const char *str = *p_str;
     long out = *p_out;
     for (char c; (c = *str) != '\0'; str++) {
         switch (c) {
@@ -47,8 +50,8 @@ exit:
     return NULL;
 }
 
-static const char *kyaa__base_8(char **p_str, long *p_out) {
-    char *str = *p_str;
+static const char *kyaa__base_8(const char **p_str, long *p_out) {
+    const char *str = *p_str;
     long out = *p_out;
     for (char c; (c = *str) != '\0'; str++) {
         switch (c) {
@@ -75,8 +78,8 @@ exit:
     return NULL;
 }
 
-static const char *kyaa__base_10(char **p_str, long *p_out) {
-    char *str = *p_str;
+static const char *kyaa__base_10(const char **p_str, long *p_out) {
+    const char *str = *p_str;
     long out = *p_out;
     for (char c; (c = *str) != '\0'; str++) {
         switch (c) {
@@ -102,8 +105,8 @@ exit:
     return NULL;
 }
 
-static const char *kyaa__base_16(char **p_str, long *p_out) {
-    char *str = *p_str;
+static const char *kyaa__base_16(const char **p_str, long *p_out) {
+    const char *str = *p_str;
     long out = *p_out;
     for (char c; (c = *str) != '\0'; str++) {
         switch (c) {
@@ -143,7 +146,7 @@ exit:
     return NULL;
 }
 
-static const char *kyaa_str_to_long(char *str, long *p_out) {
+static const char *kyaa_str_to_long(const char *str, long *p_out) {
     /* returns error message or NULL */
     long out = 0;
     int base = 10;
@@ -202,10 +205,11 @@ static const char *kyaa_str_to_long(char *str, long *p_out) {
 
 #define KYAA_FLAG_LONG(c, name, description) \
     KYAA_FLAG_ARG(c, name, description) \
-        long kyaa_flag_arg; \
-        const char *err = kyaa_str_to_long(kyaa_etc, &kyaa_flag_arg); \
+        long kyaa_long_value; \
+        const char *err = kyaa_str_to_long(kyaa_etc, &kyaa_long_value); \
         if (err) { \
-            fprintf(stderr, "%s\n", err); \
-            return KYAA_ERROR; \
+            KYAA_ERR("%s\n", err); \
+            return KYAA_FAIL; \
         } \
 
+#endif /* KYAA_EXTRA */

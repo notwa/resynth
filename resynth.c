@@ -484,39 +484,39 @@ int main(int argc, char *argv[]) {
         KYAA_FLAG_LONG('a', "autism",
 "        sensitivity to outliers\n"
 "        range: [0,256];     default: 32")
-            parameters.autism = (double)(kyaa_flag_arg) / 256.;
+            parameters.autism = (double)(kyaa_long_value) / 256.;
 
         KYAA_FLAG_LONG('N', "neighbors",
 "        points to use when sampling\n"
 "        range: [0,1024];    default: 29")
-            parameters.neighbors = kyaa_flag_arg;
+            parameters.neighbors = kyaa_long_value;
 
         KYAA_FLAG_LONG('R', "circle-radius",
 "        circle neighborhood radius\n"
 "        range: [1,128];     default: [n/a]")
-            int radius = kyaa_flag_arg;
+            int radius = kyaa_long_value;
             radius = CLAMP(radius, 1, (int)(LEN(disc00)));
             parameters.neighbors = disc00[radius - 1];
 
         KYAA_FLAG_LONG('M', "tries",
 "        random points added to candidates\n"
 "        range: [0,65536];   default: 192")
-            parameters.tries = kyaa_flag_arg;
+            parameters.tries = kyaa_long_value;
 
         KYAA_FLAG_LONG('m', "magic",
 "        magic constant, affects iterations\n"
 "        range: [0,255];     default: 192")
-            parameters.magic = kyaa_flag_arg;
+            parameters.magic = kyaa_long_value;
 
         KYAA_FLAG_LONG('s', "scale",
 "        output size multiplier; negative values set width and height\n"
 "        range: [-8192,32];  default: 1")
-            scale = kyaa_flag_arg;
+            scale = kyaa_long_value;
 
         KYAA_FLAG_LONG('S', "seed",
 "        initial RNG value\n"
 "                            default: 0 [time(0)]")
-            seed = (unsigned long) kyaa_flag_arg;
+            seed = (unsigned long) kyaa_long_value;
 
         KYAA_HELP("  {files...}\n"
 "        image files to open, resynthesize, and save as {filename}.resynth.png\n"
