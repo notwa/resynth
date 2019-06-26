@@ -121,7 +121,7 @@ resynth includes the following header libraries:
 * [rnd.h by Mattias Gustavsson][rnd] (public domain / MIT)
 
 [stb]: https://github.com/nothings/stb
-[kyaa]: https://gist.github.com/notwa/5d287d807ffe11bbb553462c9940445c#file-kyaa-md
+[kyaa]: https://github.com/notwa/kyaa
 [rnd]: https://github.com/mattiasgustavsson/libs
 
 compile like
